@@ -21,15 +21,16 @@ private:
     int initialValue = 0;
     int max = 100;
     int min = 100;
-    int grow_rate = 1;
-    int decay_rate = 1;
+    int growRate = 1;
+    int decayRate = 1;
+
 public:
     ControlPoint(int initialValue, int max, int min, int growRate, int decayRate) {
         this->initialValue = initialValue;
         this->max = max;
         this->min = min;
-        this->grow_rate = growRate;
-        this->decay_rate = decayRate;
+        this->growRate = growRate;
+        this->decayRate = decayRate;
     }
     int getValue() { return value; }
     int setValue(int value){
@@ -42,13 +43,13 @@ public:
     }
     int getMax() { return max;}
     int getMin() { return min;}
-    int getDecayRate() { return decay_rate; }
-    int getGrowRate() { return grow_rate; }
+    int getDecayRate() { return decayRate; }
+    int getGrowRate() { return growRate; }
 
     void grow(int amount){
         setValue(getValue() + amount);
     }
-    void grow() { grow(grow_rate); }
+    void grow() { grow(growRate); }
 
     void decay(int amount){
         if (amount < 0){
@@ -58,7 +59,7 @@ public:
     }
 
     void decay(){
-        decay(decay_rate);
+        decay(decayRate);
     }
 };
 
