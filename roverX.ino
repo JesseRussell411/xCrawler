@@ -7,9 +7,9 @@ int moter1pin2 = 3;
 int moter2pin1 = 4;
 int moter2pin2 = 5;
 
-int bluetoothpin = 1
+int bluetoothpin = 1;
 
-avoid setup() {
+void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600) {
 
