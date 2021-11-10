@@ -54,10 +54,16 @@ public:
     void decay(int amount){
         if (amount < 0){
             grow(-amount);
+            return;
         }
-        
-    }
+        int value_abs = abs(value);
 
+        if (value_abs <= amount){
+            value = 0;
+        } else{
+            value = (value_abs - amount) * sign(value);
+        }
+    }
     void decay(){
         decay(decayRate);
     }
