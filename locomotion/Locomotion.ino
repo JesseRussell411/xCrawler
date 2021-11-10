@@ -2,26 +2,66 @@
 Work in Progress
 ----------------
 
-This code isn't even functional yet. It's just spaughetti through at the wall
+This code isn't even functional yet. It's just spaughetti thrown at the wall
 in the hopes that some of it sticks.
 */
 
-int powerLeft = 0;
-int powerRight = 0;
+int sign(int value){
+    if (value < 0)
+        return -1;
+    else if (value > 0)
+        return 1;
+    else
+        return 0;
+}
 
-typedef struct Power{
-    int value;
-    int max;
-    int min;
-    int decay;
-    int shrink;
-} Power;
+class ControlPoint{
+private:
+    int value = 0;
+    int initialValue = 0;
+    int max = 100;
+    int min = 100;
+    int grow_rate = 1;
+    int decay_rate = 1;
+public:
+    ControlPoint(int initialValue, int max, int min, int growRate, int decayRate) {
+        this->initialValue = initialValue;
+        this->max = max;
+        this->min = min;
+        this->grow_rate = growRate;
+        this->decay_rate = decayRate;
+    }
+    int getValue() { return value; }
+    int setValue(int value){
+        if (value > max)
+            this->value = max;
+        else if (value < min)
+            this->value = min;
+        else
+            this->value = value;
+    }
+    int getMax() { return max;}
+    int getMin() { return min;}
+    int getDecayRate() { return decay_rate; }
+    int getGrowRate() { return grow_rate; }
 
-void p_decay(const Power *power) {
-    if (0 != power->value){
+    void grow(int amount){
+        setValue(getValue() + amount);
+    }
+    void grow() { grow(grow_rate); }
+
+    void decay(int amount){
+        if (amount < 0){
+            grow(-amount);
+        }
         
     }
-}
+
+    void decay(){
+        decay(decay_rate);
+    }
+};
+
 
 void setup(){
 
