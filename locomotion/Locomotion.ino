@@ -51,6 +51,7 @@ public:
     }
     void grow() { grow(growRate); }
 
+    // decays value
     void decay(int amount){
         if (amount < 0){
             grow(-amount);
@@ -64,16 +65,21 @@ public:
             value = (value_abs - amount) * sign(value);
         }
     }
+    // decays value at default rate
     void decay(){
         decay(decayRate);
     }
 };
 
 
+ControlPoint test(0, 100, -100, 1, 5);
 void setup(){
-    
+    Serial.begin(9600);
+
 }
 
 void loop(){
-
+    if (Serial.available() > 0){
+        char 
+    }
 }
