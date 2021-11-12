@@ -21,34 +21,68 @@ public:
   }
 };
 
+#define LED_2 12
+#define LED_3 11
+#define INTERVAL_COUNT 3
 
-Interval interval;
-int ledState = LOW;
+Interval intervals[INTERVAL_COUNT];
 
 
+int ledState1 = LOW;
+int ledState2 = LOW;
+int ledState3 = LOW;
 
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_2, OUTPUT);
 
-  interval = Interval([](){
-    if(ledState == LOW){
-      ledState = HIGH;
-      Serial.println("H");
+  intervals[0] = Interval([](){
+    
+    if(ledState1 == LOW){
+      ledState1 = HIGH;
     }else{
-      ledState = LOW;
-      Serial.println("L");
+      ledState1 = LOW;
     }
     
 
-    digitalWrite(LED_BUILTIN, ledState);
+    digitalWrite(LED_BUILTIN, ledState1);
 
     return 0;
-  }, 900);
+  }, 500);
+
+  intervals[1] = Interval([](){
+    
+    if(ledState2 == LOW){
+      ledState2 = HIGH;
+    }else{
+      ledState2 = LOW;
+    }
+    
+
+    digitalWrite(LED_2, ledState2);
+
+    return 0;
+  }, 200);
+
+ intervals[2] = Interval([](){
+    
+    if(ledState3 == LOW){
+      ledState3 = HIGH;
+    }else{
+      ledState3 = LOW;
+    }
+    
+
+    digitalWrite(LED_3, ledState3);
+
+    return 0;
+  }, 1000);
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  interval.update();
+  for(int i = 0; i < INTERVAL_COUNT; ++i){
+    intervals[i].update();
+  }
 }
