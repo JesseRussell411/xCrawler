@@ -11,7 +11,7 @@ public:
     this->start = millis();
   }
 
-  unsigned long getInterval() { return interval; }
+  unsigned long getInterval() const { return interval; }
   void setInterval(unsigned long value) { interval = value; }
 
   int update(){
@@ -24,10 +24,46 @@ public:
   }
 };
 
+class PulseInterval{
+private:
+  int (*action)(bool);
+  unsigned long onTime, offTime;
+  unsigned long start;
+  bool on = false;
+public:
+  PulseInterval() = default;
+  PulseInterval(int (*action)(), unsigned long onTime, unsigned long offTime){
+    this->onTime = onTime;
+    this->offTime = offTime;
+    this->action = action;
+    this->start = millis();
+  }
+
+  unsigned long getOnTime() const { return onTime; }
+  unsigned long getOffTime() const { return offTime; }
+  void setOnTime(unsigned long value) { onTime = value; }
+  void setOffTime(unsigned long vlaue) { offTime = vlaue; }
+
+
+  int update(){
+    unsigned long now = millis();
+    unsigned long ellapsed = now - start;
+    unsigned long time = on ? onTime : offTime;
+
+    if (ellapsed >= time){
+      start = now - (ellapsed - time);
+      on = !on;
+      return action(on);
+    } else return 0;
+  }
+};
+
 #define LED_2 12
 #define LED_3 11
-#define INTERVAL_COUNT 3
+#define INTERVAL_COUNT 2
+#define PULSE_INTERVAL_COUNT 1
 
+PulseInterval pulseIntervals[PULSE_INTERVAL_COUNT];
 Interval intervals[INTERVAL_COUNT];
 
 
@@ -70,24 +106,33 @@ void setup() {
     return 0;
   }, 200);
 
- intervals[2] = Interval([](){
-    
-    if(ledState3 == LOW){
-      ledState3 = HIGH;
-    }else{
-      ledState3 = LOW;
-    }
-    
-
-    digitalWrite(LED_3, ledState3);
+  pulseIntervals[0] = PulseInterval([](bool on){
+    digitalWrite(LED_3, on);
 
     return 0;
-  }, 1000);
+  }, 200, 800);
+
+//  intervals[2] = Interval([](){
+    
+//     if(ledState3 == LOW){
+//       ledState3 = HIGH;
+//     }else{
+//       ledState3 = LOW;
+//     }
+    
+
+//     digitalWrite(LED_3, ledState3);
+
+//     return 0;
+//   }, 1000);
 
 }
 
 void loop() {
   for(int i = 0; i < INTERVAL_COUNT; ++i){
     intervals[i].update();
+  }
+  for(int i = 0; i < PULSE_INTERVAL_COUNT; ++i){
+    pulseIntervals[i].update();
   }
 }
