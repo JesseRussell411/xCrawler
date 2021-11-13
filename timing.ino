@@ -11,6 +11,9 @@ public:
     this->start = millis();
   }
 
+  unsigned long getInterval() { return interval; }
+  void setInterval(unsigned long value) { interval = value; }
+
   int update(){
     unsigned long now = millis();
     unsigned long ellapsed = now - start;
@@ -31,6 +34,7 @@ Interval intervals[INTERVAL_COUNT];
 int ledState1 = LOW;
 int ledState2 = LOW;
 int ledState3 = LOW;
+
 
 void setup() {
   // put your setup code here, to run once:
