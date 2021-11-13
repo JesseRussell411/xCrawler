@@ -40,6 +40,7 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED_2, OUTPUT);
+  pinMode(LED_3, OUTPUT);
 
   intervals[0] = Interval([](){
     
