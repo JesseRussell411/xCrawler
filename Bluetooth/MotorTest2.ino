@@ -1,38 +1,137 @@
-/* 
- *  Bluetooh Basic: LED ON OFF - Avishkar
- *  Coder - Mayoogh Girish
- *  Website - http://bit.do/Avishkar
- *  Download the App : 
- *  This program lets you to control a LED on pin 13 of arduino using a bluetooth module
- */
+class Interval{
+private:
+  int (*action)();
+  unsigned long interval;
+  unsigned long start;
+public:
+  Interval() = default;
+  Interval(int (*action)(), unsigned long interval){
+    this->interval = interval;
+    this->action = action;
+    this->start = millis();
+  }
+
+  unsigned long getInterval() const { return interval; }
+  void setInterval(unsigned long value) { interval = value; }
+
+  int update(){
+    unsigned long now = millis();
+    unsigned long ellapsed = now - start;
+    if (ellapsed >= interval){
+      start = now - (ellapsed - interval);
+      return action();
+    } else return 0;
+  }
+};
+int sign(int value){
+    if (value < 0)
+        return -1;
+    else if (value > 0)
+        return 1;
+    else
+        return 0;
+}
+
+class ControlPoint{
+private:
+    int value = 0;
+    int initialValue = 0;
+    int max = 100;
+    int min = 100;
+    int growRate = 1;
+    int decayRate = 1;
+
+public:
+    ControlPoint(int initialValue, int max, int min, int growRate, int decayRate) {
+        this->initialValue = initialValue;
+        this->max = max;
+        this->min = min;
+        this->growRate = growRate;
+        this->decayRate = decayRate;
+    }
+    int getValue() { return value; }
+    int setValue(int value){
+        if (value > max)
+            this->value = max;
+        else if (value < min)
+            this->value = min;
+        else
+            this->value = value;
+    }
+    int getMax() { return max;}
+    int getMin() { return min;}
+    int getDecayRate() { return decayRate; }
+    int getGrowRate() { return growRate; }
+
+    void grow(int amount){
+        setValue(getValue() + amount);
+    }
+    void grow() { grow(growRate); }
+
+    // decays value
+    void decay(int amount){
+        if (amount < 0){
+            grow(-amount);
+            return;
+        }
+        int value_abs = abs(value);
+
+        if (value_abs <= amount){
+            value = 0;
+        } else{
+            value = (value_abs - amount) * sign(value);
+        }
+    }
+    // decays value at default rate
+    void decay(){
+        decay(decayRate);
+    }
+};
+
 #define CONTROL 3
-char Incoming_value = 0;                //Variable for storing Incoming_value
+ControlPoint speed = ControlPoint(0, 255, 0, 20, 1);
+const int intervalCount = 2;
+Interval intervals[intervalCount];
+
+
 void setup() 
 {
   Serial.begin(9600);         //Sets the data rate in bits per second (baud) for serial data transmission
-  Serial.setTimeout(10);
-  pinMode(13, OUTPUT);        //Sets digital pin 13 as output pin
+  intervals[0] = Interval([](){
+    Serial.print(speed.getValue());
+    Serial.print('\n');
+
+    return 0;
+}, 1000);
+
+intervals[1] = Interval([](){
+    speed.decay();
+    analogWrite(CONTROL, speed.getValue());
+
+    return 0;
+}, 100);
+
 }
 void loop()
 {
   if(Serial.available() > 0)  
   {
-//    Incoming_value = Serial.read();      //Read the incoming data and store it into variable Incoming_value
-//    Serial.print(Incoming_value);        //Print Value of Incoming_value in Serial monitor
-//    Serial.print("\n");        //New line 
-
-    long power = Serial.parseInt();
-    Serial.print(power);
-    Serial.print("\n");
-    Serial.flush();
-
-    analogWrite(CONTROL, power);
+   char incoming_value = Serial.read();      //Read the incoming data and store it into variable Incoming_value
+   Serial.print(incoming_value);
+   Serial.print('\n');
+   if (incoming_value == 'F') {
+       speed.grow(10);
+   } else if (incoming_value == 'R') {
+       speed.grow(speed.getGrowRate() * -1);
+   }
 
     
-//    if(Incoming_value == '1')            //Checks whether value of Incoming_value is equal to 1 
-//      digitalWrite(13, HIGH);  //If value is 1 then LED turns ON
-//    else if(Incoming_value == '0')       //Checks whether value of Incoming_value is equal to 0
-//      digitalWrite(13, LOW);   //If value is 0 then LED turns OFF
-  }                         
+
+     analogWrite(CONTROL, speed.getValue());
+  }               
+
+  for(int i = 0; i < intervalCount; ++i){
+      intervals[i].update();
+  }          
  
 }                 
