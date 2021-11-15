@@ -89,20 +89,20 @@ public:
 };
 
 #define CONTROL 3
-ControlPoint speed = ControlPoint(0, 255, 0, 20, 1);
+ControlPoint speed = ControlPoint(0, 255, 0, 20, 5);
 const int intervalCount = 2;
 Interval intervals[intervalCount];
 
 
 void setup() 
 {
-  Serial.begin(9600);         //Sets the data rate in bits per second (baud) for serial data transmission
+  Serial.begin(38400);         //Sets the data rate in bits per second (baud) for serial data transmission
   intervals[0] = Interval([](){
-    Serial.print(speed.getValue());
-    Serial.print('\n');
+//    Serial.print(speed.getValue());
+//    Serial.print('\n');
 
     return 0;
-}, 1000);
+}, 5000);
 
 intervals[1] = Interval([](){
     speed.decay();
@@ -120,7 +120,7 @@ void loop()
    Serial.print(incoming_value);
    Serial.print('\n');
    if (incoming_value == 'F') {
-       speed.grow(10);
+       speed.grow();
    } else if (incoming_value == 'R') {
        speed.grow(speed.getGrowRate() * -1);
    }
