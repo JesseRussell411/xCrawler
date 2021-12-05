@@ -6,6 +6,8 @@ private:
     int speedControlPin;
     int directionControlPin1;
     int directionControlPin2;
+    int maxSpeed;
+    int minSpeed;
 
     void apply()
     {
@@ -24,11 +26,13 @@ private:
     }
 
 public:
-    Motor(int speedControlPin, int directionControlPin1, int directionControlPin2)
+    Motor(int speedControlPin, int directionControlPin1, int directionControlPin2, int maxSpeed, int minSpeed)
     {
         this->speedControlPin = speedControlPin;
         this->directionControlPin1 = directionControlPin1;
         this->directionControlPin2 = directionControlPin2;
+        this->maxSpeed;
+        this->minSpeed;
     }
 
     void setSpeed(int speed)
@@ -38,13 +42,15 @@ public:
         apply();
     }
 
-    int getSpeed()
-    {
-        return speed * direction > 0 ? 1 : -1;
-    }
+    int getSpeed() { return speed * ((direction > 0) ? 1 : -1); }
+    int getMaxSpeed() { return maxSpeed; }
+    int getMinSpeed() { return minSpeed; }
+    int getSpeedControlPin() { return speedControlPin; }
+    int getDirectionControlPin1() { return directionControlPin1; }
+    int getDirectionControlPin2() { return directionControlPin2; }
 
     void addSpeed(int speed)
     {
-        setSpeed(getSpeed() + speed);
+        setSpeed(min(max(getSpeed() + speed, minSpeed), maxSpeed));
     }
 };

@@ -6,6 +6,7 @@ This code isn't even functional yet. It's just spaughetti thrown at the wall
 in the hopes that some of it sticks.
 */
 
+
 int sign(int value){
     if (value < 0)
         return -1;

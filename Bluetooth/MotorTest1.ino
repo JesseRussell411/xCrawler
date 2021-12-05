@@ -1,38 +1,187 @@
-/* 
- *  Bluetooh Basic: LED ON OFF - Avishkar
- *  Coder - Mayoogh Girish
- *  Website - http://bit.do/Avishkar
- *  Download the App : 
- *  This program lets you to control a LED on pin 13 of arduino using a bluetooth module
- */
-#define CONTROL 3
-char Incoming_value = 0;                //Variable for storing Incoming_value
-void setup() 
+
+int sign(int value)
 {
-  Serial.begin(9600);         //Sets the data rate in bits per second (baud) for serial data transmission
-  Serial.setTimeout(10);
-  pinMode(13, OUTPUT);        //Sets digital pin 13 as output pin
+  if (value < 0)
+    return -1;
+  else if (value > 0)
+    return 1;
+  else
+    return 0;
 }
+
+class Interval
+{
+private:
+  int (*action)();
+  unsigned long interval;
+  unsigned long start;
+
+public:
+  Interval() = default;
+  Interval(int (*action)(), unsigned long interval)
+  {
+    this->interval = interval;
+    this->action = action;
+    this->start = millis();
+  }
+
+  unsigned long getInterval() const { return interval; }
+  void setInterval(unsigned long value) { interval = value; }
+
+  int update()
+  {
+    unsigned long now = millis();
+    unsigned long ellapsed = now - start;
+    if (ellapsed >= interval)
+    {
+      start = now - (ellapsed - interval);
+      return action();
+    }
+    else
+      return 0;
+  }
+};
+
+class Motor
+{
+private:
+  int speed;
+  bool direction;
+  int speedControlPin;
+  int directionControlPin1;
+  int directionControlPin2;
+  int maxSpeed;
+  int minSpeed;
+
+  void apply()
+  {
+    if (direction)
+    {
+      digitalWrite(directionControlPin1, HIGH);
+      digitalWrite(directionControlPin2, LOW);
+    }
+    else
+    {
+      digitalWrite(directionControlPin1, LOW);
+      digitalWrite(directionControlPin2, HIGH);
+    }
+
+    analogWrite(speedControlPin, speed);
+  }
+
+public:
+  Motor(int speedControlPin, int directionControlPin1, int directionControlPin2, int maxSpeed, int minSpeed)
+  {
+    this->speedControlPin = speedControlPin;
+    this->directionControlPin1 = directionControlPin1;
+    this->directionControlPin2 = directionControlPin2;
+    this->maxSpeed = maxSpeed;
+    this->minSpeed = minSpeed;
+  }
+  Motor() = default;
+
+  void setSpeed(int speed)
+  {
+    speed = max(min(speed, maxSpeed), minSpeed);
+
+    this->speed = abs(speed);
+    //this->speed = speed;
+    this->direction = speed > 0;
+    apply();
+  }
+
+  int getSpeed() { return speed * (direction ? 1 : -1); }
+  int getMaxSpeed() { return maxSpeed; }
+  int getMinSpeed() { return minSpeed; }
+  int getSpeedControlPin() { return speedControlPin; }
+  int getDirectionControlPin1() { return directionControlPin1; }
+  int getDirectionControlPin2() { return directionControlPin2; }
+
+  void addSpeed(int speed)
+  {
+    setSpeed(min(max(getSpeed() + speed, minSpeed), maxSpeed));
+  }
+};
+
+Motor left, right;
+
+Interval left_decay, right_decay, status;
+const int decay = 10;
+const int decay_f = 100;
+const int acceleration = 150;
+
+void setup()
+{
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+
+  left = Motor(5, 6, 7, 255, -255);
+  right = Motor(10, 8, 9, 255, -255);
+
+  left_decay = Interval([]()
+                        {
+                          if (abs(left.getSpeed()) <= decay)
+                            left.setSpeed(0);
+                          else
+                            left.addSpeed(sign(left.getSpeed()) * -decay);
+                          return 1;
+                        },
+                        decay_f);
+
+  right_decay = Interval([]()
+                         {
+                           if (abs(right.getSpeed()) <= decay)
+                             right.setSpeed(0);
+                           else
+                             right.addSpeed(sign(right.getSpeed()) * -decay);
+                           return 1;
+                         },
+                         decay_f);
+
+  status = Interval([]()
+                    {
+                      Serial.println(left.getSpeed());
+                      Serial.println(right.getSpeed());
+                      Serial.println();
+                    },
+                    1000);
+
+  left.setSpeed(0);
+  right.setSpeed(0);
+
+  Serial.begin(38400);
+  Serial.setTimeout(10);
+
+  Serial.print("ready!\n");
+}
+
 void loop()
 {
-  if(Serial.available() > 0)  
+
+  left_decay.update();
+  right_decay.update();
+  status.update();
+
+  if (Serial.available())
   {
-//    Incoming_value = Serial.read();      //Read the incoming data and store it into variable Incoming_value
-//    Serial.print(Incoming_value);        //Print Value of Incoming_value in Serial monitor
-//    Serial.print("\n");        //New line 
+    char c = Serial.read();
 
-    long power = Serial.parseInt();
-    Serial.print(power);
-    Serial.print("\n");
-    Serial.flush();
-
-    analogWrite(CONTROL, power);
-
-    
-//    if(Incoming_value == '1')            //Checks whether value of Incoming_value is equal to 1 
-//      digitalWrite(13, HIGH);  //If value is 1 then LED turns ON
-//    else if(Incoming_value == '0')       //Checks whether value of Incoming_value is equal to 0
-//      digitalWrite(13, LOW);   //If value is 0 then LED turns OFF
-  }                         
- 
-}                 
+    switch (c)
+    {
+    case 'R':
+      right.addSpeed(acceleration);
+      break;
+    case 'r':
+      right.addSpeed(-acceleration);
+      break;
+    case 'L':
+      left.addSpeed(acceleration);
+      break;
+    case 'l':
+      left.addSpeed(-acceleration);
+      break;
+    }
+  }
+}
