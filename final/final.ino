@@ -105,15 +105,46 @@ public:
   }
 };
 
-Motor left, right;
-
-Interval left_decay, right_decay, status;
+//=============================================================================================================================
 
 //============== parameters ===========
-const int decay = 20;
+const int decay = 15;
 const int decay_f = 50;
 const int acceleration = 200;
 //===================================
+
+Motor left = Motor(5, 6, 7, 255, -255);
+Motor right = Motor(10, 8, 9, 255, -255);
+
+// Interval left_decay, right_decay, status;
+Interval left_decay = Interval([]()
+                               {
+                                 if (abs(left.getSpeed()) <= decay)
+                                   left.setSpeed(0);
+                                 else
+                                   left.addSpeed(sign(left.getSpeed()) * -decay);
+                                 return 1;
+                               },
+                               decay_f);
+
+Interval right_decay = Interval([]()
+                                {
+                                  if (abs(right.getSpeed()) <= decay)
+                                    right.setSpeed(0);
+                                  else
+                                    right.addSpeed(sign(right.getSpeed()) * -decay);
+                                  return 1;
+                                },
+                                decay_f);
+
+Interval status = Interval([]()
+                           {
+                             Serial.println(left.getSpeed());
+                             Serial.println(right.getSpeed());
+                             Serial.println();
+                             return 1;
+                           },
+                           500);
 
 void setup()
 {
@@ -121,37 +152,6 @@ void setup()
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
-
-  left = Motor(5, 6, 7, 255, -255);
-  right = Motor(10, 8, 9, 255, -255);
-
-  left_decay = Interval([]()
-                        {
-                          if (abs(left.getSpeed()) <= decay)
-                            left.setSpeed(0);
-                          else
-                            left.addSpeed(sign(left.getSpeed()) * -decay);
-                          return 1;
-                        },
-                        decay_f);
-
-  right_decay = Interval([]()
-                         {
-                           if (abs(right.getSpeed()) <= decay)
-                             right.setSpeed(0);
-                           else
-                             right.addSpeed(sign(right.getSpeed()) * -decay);
-                           return 1;
-                         },
-                         decay_f);
-
-  status = Interval([]()
-                    {
-                      Serial.println(left.getSpeed());
-                      Serial.println(right.getSpeed());
-                      Serial.println();
-                    },
-                    500);
 
   left.setSpeed(0);
   right.setSpeed(0);
@@ -187,6 +187,11 @@ void loop()
     case 'l':
       left.addSpeed(-acceleration);
       break;
+    case 's':
+      left.setSpeed(0);
+      right.setSpeed(0);
+      break;
+    
     }
   }
-} 
+}
