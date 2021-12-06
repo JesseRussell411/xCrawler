@@ -146,6 +146,25 @@ Interval status = Interval([]()
                            },
                            500);
 
+// =============== accessories ===========
+const int seedSowerControlPin = 11;
+bool seedSowerRunning = false;
+int seedSowerSpeed = 150;
+bool accessory0_toggle()
+{
+  seedSowerRunning = !seedSowerRunning;
+
+  if (seedSowerRunning)
+  {
+    analogWrite(seedSowerControlPin, seedSowerSpeed);
+  }
+  else
+  {
+    analogWrite(seedSowerControlPin, 0);
+  }
+}
+//=========================================
+
 void setup()
 {
   pinMode(6, OUTPUT);
@@ -167,7 +186,7 @@ void loop()
 
   left_decay.update();
   right_decay.update();
-  status.update();
+  //  status.update();
 
   if (Serial.available())
   {
@@ -191,7 +210,21 @@ void loop()
       left.setSpeed(0);
       right.setSpeed(0);
       break;
-    
+    case '0':
+      accessory0_toggle();
+      break;
+
+    // case '1':
+    //   seedSowerSpeed += 1;
+    //   digitalWrite(seedSowerControlPin, seedSowerSpeed);
+    //   break;
+    // case '2':
+    //   seedSowerSpeed -= 1;
+    //   digitalWrite(seedSowerControlPin, seedSowerSpeed);
+    //   break;
+    // case '3':
+    //   Serial.println(seedSowerSpeed);
+    //   break;
     }
   }
 }
